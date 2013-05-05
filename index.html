@@ -1,0 +1,53 @@
+
+<html>
+<head>
+	<title>A* test</title>
+
+	<style type="text/css">
+
+		.container { width: 800px; left: 50%; margin-left: -400px; position: absolute; top : 50%; margin-top: -400px; border: 1px solid black;}
+	</style>
+</head>
+<body onload="init()">
+	<div class="container">
+		<button onclick="init()">Init</button>
+		<button onclick="astar()">A*</button>
+		<canvas id="canv" width="800" height="800"></canvas>
+	</div>
+	<script type="text/javascript" src="cellstate.js"></script>
+	<script type="text/javascript" src="cell.js"></script>
+	<script type="text/javascript" src="grid.js"></script>
+	<script type="text/javascript" src="priorityqueue.js"></script>
+	<script type="text/javascript" src="searchgrid.js"></script>
+	<script type="text/javascript" src="astar.js"></script>
+	<script type="text/javascript">
+
+		var Options = 
+		{
+				boxSize: 10
+			,	lineColor: 'rgb(125,125,125)'
+			,	epsilon: 0.000000000001
+		};
+
+		var Support = 
+		{
+			
+		};
+
+		function init() 
+		{	
+			var element = document.getElementById('canv');
+			window.searchgrid = new SearchGrid(element.getContext('2d'), element, Options);
+		}
+
+		function astar()
+		{	
+			var searchAdapter = new AStarSearchAdapter(searchgrid, {})
+			searchgrid.setSearchAdapter( searchAdapter );
+			searchgrid.runSearch();		
+		}
+		
+
+	</script>
+</body>
+</html>
