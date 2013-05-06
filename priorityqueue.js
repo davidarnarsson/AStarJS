@@ -29,7 +29,7 @@
     var sorted = false;
     var sortStyle;
 
-    if(options && options.low) {
+    if (options && options.low) {
       sortStyle = prioritySortLow;
     } else {
       sortStyle = prioritySortHigh;
@@ -53,13 +53,13 @@
        * @see PrioirtyQueue#top
        */
       pop: function() {
-        if(!sorted) {
+        if (!sorted) {
           sort();
         }
 
         var element = contents.pop();
 
-        if(element) {
+        if (element) {
           return element.object;
         } else {
           return undefined;
@@ -75,13 +75,13 @@
        * @see PriorityQueue#pop
        */
       top: function() {
-        if(!sorted) {
+        if (!sorted) {
           sort();
         }
 
         var element = contents[contents.length - 1];
 
-        if(element) {
+        if (element) {
           return element.object;
         } else {
           return undefined;
@@ -94,8 +94,8 @@
        * @returns true if the object is in the queue, false otherwise.
        */
       includes: function(object) {
-        for(var i = contents.length - 1; i >= 0; i--) {
-          if(contents[i].object === object) {
+        for (var i = contents.length - 1; i >= 0; i--) {
+          if (contents[i].object === object) {
             return true;
           }
         }
@@ -125,7 +125,10 @@
        * @param priority The priority of the object.
        */
       push: function(object, priority) {
-        contents.push({object: object, priority: priority});
+        contents.push({
+          object: object,
+          priority: priority
+        });
         sorted = false;
       }
     };

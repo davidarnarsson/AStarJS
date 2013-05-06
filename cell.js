@@ -11,8 +11,7 @@ Cell = (function() {
 		@param {Integer} sideLength - the length of one side of the Cell, which is assumed to be square.
 		@param {CellState} state - The initial cell state.
 	*/
-	function Cell(id,x, y, sideLength, state) 
-	{
+	function Cell(id, x, y, sideLength, state) {
 
 		/**
 			@private 
@@ -21,23 +20,23 @@ Cell = (function() {
 			The Cell is assumed to be a square.
 		*/
 		var sideLength = sideLength
-		
+
 		/**
 			@private 
 			@member Cell
 			The Fill color of the cell. Used for drawing the cell.
 		*/
-		var	fillColor = 'rgb(255,255,255)';
-		
+		var fillColor = 'rgb(255,255,255)';
+
 		var self = {
-		
+
 			/**
 				@public 
 				@member Cell
 				The ID of the cell.
 			*/
 			id: id,
-		
+
 			/**
 				@public 
 				@member Cell
@@ -66,11 +65,10 @@ Cell = (function() {
 
 				@param {Integer} s - the state to set the Cell to.
 			*/
-			setState: function(s)
-			{
-				state = s;
-				switch(state) {
-					case CellState.NORMAL: 
+			setState: function(s) {
+				this.state = s;
+				switch (this.state) {
+					case CellState.NORMAL:
 						fillColor = 'rgb(255,255,255)';
 						break;
 					case CellState.WALL:
@@ -82,10 +80,10 @@ Cell = (function() {
 					case CellState.PATH:
 						fillColor = 'rgb(51,221,51)';
 						break;
-					case CellState.START: 
+					case CellState.START:
 						fillColor = 'blue';
 						break;
-					case CellState.TARGET: 
+					case CellState.TARGET:
 						fillColor = 'red';
 						break;
 				};
@@ -98,8 +96,7 @@ Cell = (function() {
 
 				@param {2DCanvasContext} ctx - The Canvas context to draw the cell to.
 			*/
-			draw: function(ctx) 
-			{
+			draw: function(ctx) {
 				ctx.beginPath();
 				ctx.fillStyle = fillColor;
 				ctx.fillRect(x * sideLength + 1, y * sideLength + 1, sideLength - 2, sideLength - 2);
@@ -115,17 +112,12 @@ Cell = (function() {
 
 				@returns the state the cell ends up in.
 			*/
-			onClick: function(ctx) 
-			{
-				var s = state === CellState.NORMAL 
-					? CellState.WALL 
-					: (state === CellState.WALL 
-						
-						? CellState.START 
-						: (state === CellState.START 
-							
-							? CellState.TARGET 
-							: CellState.NORMAL));
+			onClick: function(ctx) {
+				var s = this.state === CellState.NORMAL ? CellState.WALL : (this.state === CellState.WALL
+
+				? CellState.START : (this.state === CellState.START
+
+				? CellState.TARGET : CellState.NORMAL));
 
 				this.setState(s);
 				this.draw(ctx);
@@ -143,11 +135,8 @@ Cell = (function() {
 
 				@returns the state the cell ends up in.
 			*/
-			onMove: function(ctx)
-			{
-				var s = state === CellState.NORMAL 
-					? CellState.WALL 
-					: CellState.NORMAL;
+			onMove: function(ctx) {
+				var s = this.state === CellState.NORMAL ? CellState.WALL : CellState.NORMAL;
 
 				this.setState(s);
 
@@ -156,7 +145,7 @@ Cell = (function() {
 				return s;
 			}
 		};
-		
+
 		/* set the state of the cell. */
 		self.setState(state);
 

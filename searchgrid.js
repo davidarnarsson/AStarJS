@@ -11,58 +11,62 @@ SearchGrid = (function() {
 		@param {CanvasContext} context - the Canvas Context
 		@param {HTMLCanvasElement} element - the Canvas element 
 		@param {object} options - An object options, boxSize
-	*/  
-	function SearchGrid(context, element, options) 
-	{
+	*/
+	function SearchGrid(context, element, options) {
 		/**
 			@private
 			@member SearchGrid
-			the canvas Context */ 
+			the canvas Context */
 		var ctx = context
 
 		/**
 			@private
 			@member SearchGrid
 			the canvas width */
-		,	width = context.canvas.width
+		,
+			width = context.canvas.width
 
-		/**
-			@private
-			@member SearchGrid
-			the canvas height */
-		,	height = context.canvas.height
-		/**
-			@private
-			@member SearchGrid
-			the resulting number of cells per row. */
-		,	rowCount = context.canvas.width / options.boxSize
+			/**
+				@private
+				@member SearchGrid
+				the canvas height */
+			,
+			height = context.canvas.height
+			/**
+				@private
+				@member SearchGrid
+				the resulting number of cells per row. */
+			,
+			rowCount = context.canvas.width / options.boxSize
 
-		/**
-			@private
-			@member SearchGrid
-			The ids of the target- and starting cells the path finding algorithms should connect. */
-		,	targetCell = startCell = -1
+			/**
+				@private
+				@member SearchGrid
+				The ids of the target- and starting cells the path finding algorithms should connect. */
+			,
+			targetCell = startCell = -1
 
-		/**
-			@public
-			@member SearchGrid
-			The cells of the grid.
-		*/
-		,	cells = []
+			/**
+				@public
+				@member SearchGrid
+				The cells of the grid.
+			*/
+			,
+			cells = []
 
-		/** 
-			@private
-			@member SearchGrid
+			/** 
+				@private
+				@member SearchGrid
 
-			The search adapter. A search adapter implements an interface which conducts the path finding
-			between the target cell and the starting cell.
-		*/
-		,	searchAdapter = null;
+				The search adapter. A search adapter implements an interface which conducts the path finding
+				between the target cell and the starting cell.
+			*/
+			,
+			searchAdapter = null;
 
 
-		var self = 
-		{
-			cells : cells,
+		var self = {
+			cells: cells,
 			/**
 				@public 
 
@@ -73,7 +77,7 @@ SearchGrid = (function() {
 				@param {Integer} x - the X coordinate of the cell.
 				@param {Integer} y - the Y coordinate of the cell.
 			*/
-			getCell: function(x,y) {
+			getCell: function(x, y) {
 				return cells[x * rowCount + y];
 			},
 			/**
@@ -93,28 +97,30 @@ SearchGrid = (function() {
 			getAdjacent: function(id) {
 				var ids = [];
 
-				if(id > rowCount) 
-				{
+				if (id > rowCount) {
 					ids.push(id - rowCount);
 				}
 
-				if(id % rowCount > 0) 
-				{
-					ids.push(id-1);
+				if (id % rowCount > 0) {
+					ids.push(id - 1);
 				}
 
-				if(id % rowCount < rowCount - 1)  
-				{
-					ids.push(id+1);
+				if (id % rowCount < rowCount - 1) {
+					ids.push(id + 1);
 				}
 
-				if(id < cells.length - rowCount)
-				{
+				if (id < cells.length - rowCount) {
 					ids.push(id + rowCount);
 				}
 
 				var _this = this;
-				return ids.filter(function(i) { return _this.get(i)._state !== CellState.WALL; });
+				var filtered = ids.filter(function(i) {
+					return _this.get(i).state !== CellState.WALL;
+				});
+
+				
+
+				return filtered;
 			},
 
 			/**
@@ -150,44 +156,53 @@ SearchGrid = (function() {
 				return targetCell;
 			},
 
-			runSearch: function() {
-				if(!searchAdapter) throw "Search adapter not set!";
+			runSearch: function(callback) {
+				if (!searchAdapter) throw "Search adapter not set!";
 
-				searchAdapter.run(ctx);
+				var _this = this;
+				
+				unregisterEvents();
+
+				searchAdapter.run(ctx, function(result) {
+					registerEvents();
+					callback(result);
+				});
 			}
 
 		};
-		
+
 		/**
 			@private
 			Registers the click events
 		*/
-		var registerEvents = function() 
-		{
-			var	mouseDown = false
-			,	lastEvent = null;
+		var registerEvents = function() {
+			var mouseDown = false,
+				lastEvent = null;
 
-			element.addEventListener('mousedown', function(e) 
-			{
+			element.addEventListener('mousedown', function(e) {
 				handleClickEvent(e, lastEvent);
 				lastEvent = e;
 				mouseDown = true;
 			}, false);
 
-			element.addEventListener('mousemove', function(e) 
-			{
-				if(mouseDown) {
+			element.addEventListener('mousemove', function(e) {
+				if (mouseDown) {
 					handleMoveEvent(e, lastEvent);
 					lastEvent = e;
 				}
 			})
 
-			element.addEventListener('mouseup', function(e) 
-			{
+			element.addEventListener('mouseup', function(e) {
 				mouseDown = false;
 			});
 		};
 
+
+		var unregisterEvents = function() {
+			element.removeEventListener('mousedown');
+			element.removeEventListener('mousemove');
+			element.removeEventListener('mouseup');
+		}
 
 		/**
 			@private 
@@ -198,24 +213,18 @@ SearchGrid = (function() {
 			@param {Event} e - the current mouse clicked event 
 			@param {Event} lastClickEvent - the last mouse clicked event 
 		*/
-		var handleClickEvent = function(e, lastClickEvent) 
-		{
-			var coordsCurrentEvent = getCoordinates(e)
-			,	coordsLastEvent = lastClickEvent ? getCoordinates(lastClickEvent) : null;
+		var handleClickEvent = function(e, lastClickEvent) {
+			var coordsCurrentEvent = getCoordinates(e),
+				coordsLastEvent = lastClickEvent ? getCoordinates(lastClickEvent) : null;
 
-			if(coordsCurrentEvent[0] < 0 
-				|| coordsCurrentEvent[1] < 0 
-				|| coordsCurrentEvent[0] > cells.length 
-				|| coordsCurrentEvent[1] > cells.length) 
-			{
+			if (coordsCurrentEvent[0] < 0 || coordsCurrentEvent[1] < 0 || coordsCurrentEvent[0] > cells.length || coordsCurrentEvent[1] > cells.length) {
 				return;
 			}
 
-			if(coordsLastEvent && (coordsCurrentEvent[0] === coordsLastEvent[0] && coordsCurrentEvent[1] === coordsLastEvent[1]))
-			{
-				var cell = self.getCell(coordsCurrentEvent[0],coordsCurrentEvent[1]);
-				var state = cell.onClick(ctx);	
-				
+			if (coordsLastEvent && (coordsCurrentEvent[0] === coordsLastEvent[0] && coordsCurrentEvent[1] === coordsLastEvent[1])) {
+				var cell = self.getCell(coordsCurrentEvent[0], coordsCurrentEvent[1]);
+				var state = cell.onClick(ctx);
+
 				handleStateChange(cell.id, state)
 			}
 		};
@@ -231,31 +240,24 @@ SearchGrid = (function() {
 			@param {Integer} cell - the cell id of the cell that was clicked
 			@param {Integer} state - the CellState of the cell that was clicked.
 		*/
-		var handleStateChange = function(cell, state)
-		{
-			if(state === CellState.START) 
-			{
-				if(startCell >= 0) 
-				{
+		var handleStateChange = function(cell, state) {
+			if (state === CellState.START) {
+				if (startCell >= 0) {
 					cells[startCell].setState(CellState.NORMAL);
 					cells[startCell].draw(ctx);
 				}
 
 				startCell = cell;
-			}
-			else if (state === CellState.TARGET) 
-			{
-				if(targetCell >= 0) 
-				{
+			} else if (state === CellState.TARGET) {
+				if (targetCell >= 0) {
 					cells[targetCell].setState(CellState.NORMAL);
 					cells[targetCell].draw(ctx);
 				}
 
 				targetCell = cell;
 			}
-			
-			if(startCell === targetCell) 
-			{
+
+			if (startCell === targetCell) {
 				startCell = -1;
 			}
 		};
@@ -267,24 +269,18 @@ SearchGrid = (function() {
 			@param {Event} e - The current mouse event to parse.
 			@param {Event} lastClickEvent - the last click event that happened.
 		*/
-		var handleMoveEvent = function(e, lastClickEvent) 
-		{
-			var coordsCurrentEvent = getCoordinates(e)
-			,	coordsLastEvent = lastClickEvent ? getCoordinates(lastClickEvent) : null;
+		var handleMoveEvent = function(e, lastClickEvent) {
+			var coordsCurrentEvent = getCoordinates(e),
+				coordsLastEvent = lastClickEvent ? getCoordinates(lastClickEvent) : null;
 
-			if(coordsCurrentEvent[0] < 0 
-				|| coordsCurrentEvent[1] < 0 
-				|| coordsCurrentEvent[0] > cells.length 
-				|| coordsCurrentEvent[1] > cells.length) 
-			{
+			if (coordsCurrentEvent[0] < 0 || coordsCurrentEvent[1] < 0 || coordsCurrentEvent[0] > cells.length || coordsCurrentEvent[1] > cells.length) {
 				return;
 			}
 
-			if(coordsLastEvent && (coordsCurrentEvent[0] !== coordsLastEvent[0] || coordsCurrentEvent[1] !== coordsLastEvent[1]))
-			{
-				var cell = self.getCell(coordsCurrentEvent[0],coordsCurrentEvent[1]);
-				var state = cell.onMove(ctx);	
-				
+			if (coordsLastEvent && (coordsCurrentEvent[0] !== coordsLastEvent[0] || coordsCurrentEvent[1] !== coordsLastEvent[1])) {
+				var cell = self.getCell(coordsCurrentEvent[0], coordsCurrentEvent[1]);
+				var state = cell.onMove(ctx);
+
 				handleStateChange(cell.id, state)
 			}
 		};
@@ -298,10 +294,10 @@ SearchGrid = (function() {
 			@returns A tuple of coordinates.
 		*/
 		var getCoordinates = function(e) {
-			var y = Math.floor(e.offsetX / (options.boxSize + options.epsilon))
-			,	x = Math.floor(e.offsetY / (options.boxSize + options.epsilon));
+			var y = Math.floor(e.offsetX / (options.boxSize + options.epsilon)),
+				x = Math.floor(e.offsetY / (options.boxSize + options.epsilon));
 
-			return [x,y];
+			return [x, y];
 		}
 
 
@@ -316,21 +312,20 @@ SearchGrid = (function() {
 		grid.draw(ctx);
 
 		/* generate the cells */
-		
-		for(var i = 0; i < rowCount * rowCount; ++i) 
-		{
-			var y = Math.floor(i / rowCount)
-			,	x = i % rowCount;
 
-			cells[i] = new Cell(i,x ,y ,Options.boxSize, CellState.NORMAL);
+		for (var i = 0; i < rowCount * rowCount; ++i) {
+			var y = Math.floor(i / rowCount),
+				x = i % rowCount;
+
+			cells[i] = new Cell(i, x, y, Options.boxSize, CellState.NORMAL);
 		}
 
-		/* register click events */ 
+		/* register click events */
 		registerEvents();
 
 
 		return self;
-	}	
+	}
 
 
 	return SearchGrid;
