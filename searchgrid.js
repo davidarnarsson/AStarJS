@@ -62,7 +62,25 @@ SearchGrid = (function() {
 				between the target cell and the starting cell.
 			*/
 			,
-			searchAdapter = null;
+			searchAdapter = null
+
+			/**
+				The last event triggered.
+
+				@private
+				@member SearchGrid
+			*/
+			,
+			lastEvent = null
+
+			/**
+				Indicates whether the mouse is down or not.
+
+				@private 
+				@member SearchGrid
+			*/
+			,
+			mouseDown = false;
 
 
 		var self = {
@@ -176,22 +194,8 @@ SearchGrid = (function() {
 			Registers the click events
 		*/
 		var registerEvents = function() {
-			var mouseDown = false,
-				lastEvent = null;
-
-			element.addEventListener('mousedown', function(e) {
-				handleClickEvent(e, lastEvent);
-				lastEvent = e;
-				mouseDown = true;
-			}, false);
-
-			element.addEventListener('mousemove', function(e) {
-				if (mouseDown) {
-					handleMoveEvent(e, lastEvent);
-					lastEvent = e;
-				}
-			})
-
+			element.addEventListener('mousedown', handleClickEvent, false);
+			element.addEventListener('mousemove', handleMoveEvent, false);
 			element.addEventListener('mouseup', function(e) {
 				mouseDown = false;
 			});
@@ -199,9 +203,8 @@ SearchGrid = (function() {
 
 
 		var unregisterEvents = function() {
-			element.removeEventListener('mousedown');
-			element.removeEventListener('mousemove');
-			element.removeEventListener('mouseup');
+			element.removeEventListener('mousedown', handleClickEvent);
+			element.removeEventListener('mousemove', handleMoveEvent);
 		}
 
 		/**
@@ -213,9 +216,10 @@ SearchGrid = (function() {
 			@param {Event} e - the current mouse clicked event 
 			@param {Event} lastClickEvent - the last mouse clicked event 
 		*/
-		var handleClickEvent = function(e, lastClickEvent) {
+		var handleClickEvent = function(e) {
+			e.preventDefault();
 			var coordsCurrentEvent = getCoordinates(e),
-				coordsLastEvent = lastClickEvent ? getCoordinates(lastClickEvent) : null;
+				coordsLastEvent = lastEvent ? getCoordinates(lastEvent) : null;
 
 			if (coordsCurrentEvent[0] < 0 || coordsCurrentEvent[1] < 0 || coordsCurrentEvent[0] > cells.length || coordsCurrentEvent[1] > cells.length) {
 				return;
@@ -227,6 +231,8 @@ SearchGrid = (function() {
 
 				handleStateChange(cell.id, state)
 			}
+			lastEvent = e;
+			mouseDown = true;
 		};
 
 
@@ -269,19 +275,24 @@ SearchGrid = (function() {
 			@param {Event} e - The current mouse event to parse.
 			@param {Event} lastClickEvent - the last click event that happened.
 		*/
-		var handleMoveEvent = function(e, lastClickEvent) {
-			var coordsCurrentEvent = getCoordinates(e),
-				coordsLastEvent = lastClickEvent ? getCoordinates(lastClickEvent) : null;
+		var handleMoveEvent = function(e) {
+			e.preventDefault();
+			if (mouseDown) {
+				var coordsCurrentEvent = getCoordinates(e),
+					coordsLastEvent = lastEvent ? getCoordinates(lastEvent) : null;
 
-			if (coordsCurrentEvent[0] < 0 || coordsCurrentEvent[1] < 0 || coordsCurrentEvent[0] > cells.length || coordsCurrentEvent[1] > cells.length) {
-				return;
-			}
+				if (coordsCurrentEvent[0] < 0 || coordsCurrentEvent[1] < 0 || coordsCurrentEvent[0] > cells.length || coordsCurrentEvent[1] > cells.length) {
+					return;
+				}
 
-			if (coordsLastEvent && (coordsCurrentEvent[0] !== coordsLastEvent[0] || coordsCurrentEvent[1] !== coordsLastEvent[1])) {
-				var cell = self.getCell(coordsCurrentEvent[0], coordsCurrentEvent[1]);
-				var state = cell.onMove(ctx);
+				if (coordsLastEvent && (coordsCurrentEvent[0] !== coordsLastEvent[0] || coordsCurrentEvent[1] !== coordsLastEvent[1])) {
+					var cell = self.getCell(coordsCurrentEvent[0], coordsCurrentEvent[1]);
+					var state = cell.onMove(ctx);
 
-				handleStateChange(cell.id, state)
+					handleStateChange(cell.id, state)
+				}
+
+				lastEvent = e;
 			}
 		};
 
