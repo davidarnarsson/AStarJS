@@ -1,4 +1,89 @@
 SearchGrid = (function() {
+	
+	/**
+		@private 
+	*/
+	var adjacencyNodes = {
+
+		/**
+			adjacent4 returns the following nodes marked X around the node O:
+
+			 - | X | - 
+			 X | O | X
+			 - | X | -
+
+			@private 
+		*/
+		adjacent4: function(id, totalCells, rowCount) {
+			var ids = [];
+
+			if (id > rowCount) {
+				ids.push(id - rowCount);
+			}
+
+			if (id % rowCount > 0) {
+				ids.push(id - 1);
+			}
+
+			if (id % rowCount < rowCount - 1) {
+				ids.push(id + 1);
+			}
+
+			if (id < totalCells - rowCount) {
+				ids.push(id + rowCount);
+			}
+
+			return ids;
+		},
+
+		/**
+			adjacent8 returns the following nodes marked X around the node O:
+
+			 X | X | X 
+			 X | O | X
+			 X | X | X
+
+			@private 
+		*/
+		adjacent8: function(id, totalCells, rowCount) {
+			var ids = [];
+
+			if (id > rowCount) {
+				ids.push(id - rowCount);
+				
+				if((id-1) % rowCount > 0) {
+					ids.push(id - rowCount - 1);
+				}
+
+				if((id+1) % rowCount < rowCount - 1) {
+					ids.push(id - rowCount + 1);
+				}
+			}
+
+			if (id % rowCount > 0) {
+				ids.push(id - 1);
+			}
+
+			if (id % rowCount < rowCount - 1) {
+				ids.push(id + 1);
+			}
+
+			if (id < totalCells - rowCount) {
+				ids.push(id + rowCount);
+
+				if((id-1) % rowCount > 0) {
+					ids.push(id + rowCount - 1);
+				}
+				
+				if((id+1) % rowCount < rowCount - 1) {
+					ids.push(id + rowCount + 1);
+				}
+			}
+
+			return ids;
+		}
+	};
+
 	/* 
 		@constructor
 
@@ -113,23 +198,15 @@ SearchGrid = (function() {
 				@public 
 			*/
 			getAdjacent: function(id) {
-				var ids = [];
 
-				if (id > rowCount) {
-					ids.push(id - rowCount);
-				}
+				// Get the adjacency filter. 
+				var adjacencyFilter = typeof options.adjacencyFilter === "function" 
+					? options.adjacencyFilter()
+					: (typeof options.adjacencyFilter === "string" 
+						? options.adjacencyFilter 
+						: 'adjacent4');
 
-				if (id % rowCount > 0) {
-					ids.push(id - 1);
-				}
-
-				if (id % rowCount < rowCount - 1) {
-					ids.push(id + 1);
-				}
-
-				if (id < cells.length - rowCount) {
-					ids.push(id + rowCount);
-				}
+				var ids = adjacencyNodes[adjacencyFilter](id, cells.length, rowCount);
 
 				var _this = this;
 				var filtered = ids.filter(function(i) {
