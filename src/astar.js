@@ -3,6 +3,10 @@ AStarSearchAdapter = (function() {
 
 	/**
 		@constructor
+		@global AStarSearchAdapter
+
+		@param {Object} searchgrid - the grid of nodes to search from.
+		@param {Object} options - A map of options, such as the delay between open set pops.								
 	*/
 	function AStarSearchAdapter(searchgrid, options) {
 
@@ -74,8 +78,15 @@ AStarSearchAdapter = (function() {
 			@private 
 			@member AStarSearchAdapter
 		*/
-		,	target = searchgrid.getTargetNode();
+		,	target = searchgrid.getTargetNode()
 
+		/**
+			The previous best found path, used for drawing and resetting drawing state.
+
+			@private 
+			@member AStarSearchAdapter
+		*/
+		,	previousPath = null;
 
 		/**
 			Constructs a path based on the the came from parameter and the current node.
@@ -99,6 +110,9 @@ AStarSearchAdapter = (function() {
 
 			@private 
 			@member AStarSearchAdapter
+			@param {Object} node - The node id of the current node
+			@param {Object} targetNode - The node id of the target node
+			@returns a heuristic value which indicates the goodness of the current node.
 		*/
 		var heuristic = function(node, targetNode) {
 			var target = nodes.get(targetNode)
@@ -110,26 +124,61 @@ AStarSearchAdapter = (function() {
 		};
 
 
-		var self = {
-			
-			
-			run: function(ctx) {
+		/**
+			Draws a path on the canvas context and clears a previously drawn path.
 
-				// while the open set has has nodes
-				// (in the beginning the starting node is the only node)
-				while(openSet.size() > 0) { 
+			@private
+			@member AStarSearchAdapter
+		*/		
+		var drawPath = function(ctx, path) {
+			if(previousPath) {
+				for(var i = 0; i < previousPath.length; ++i) {
+					nodes.get(previousPath[i]).setState(CellState.PLOTTING);
+					nodes.get(previousPath[i]).draw(ctx);
+				}	
+			}
+
+			for(var i = 0; i < path.length; ++i) {
+				nodes.get(path[i]).setState(CellState.PATH);
+				nodes.get(path[i]).draw(ctx);
+			}	
+
+			previousPath = path;
+		}
+
+
+		var self = {
+
+			/**
+				Runs the A* search algorithm as well as drawing the current state
+				of the search to the canvas context parameter.
+
+				@public
+				@member AStarSearchAdapter
+				@param {Object} ctx - The canvas context
+				@param {Function} done - A callback function which will get called once the algorithm has been run.
+				@returns a path of node-ids if a path was found, false if no path was found.
+			*/
+			run: function(ctx, done) {
+
+				function onePass() {
+					
 					var current = openSet.pop();
 
 					// if the current node on top of the open set 
 					// is the target node 
 					if(current === target) {
-
+					
 						// we return the constructed path.
-						return getPath(nodePathMap, target);
+						drawPath(ctx, getPath(nodePathMap, target));
+						done(getPath(nodePathMap, target));
+						return;
 					}
 
 					// we mark the current node as visited.
 					closedSet[current] = 1;
+					nodes.get(current).setState(CellState.PLOTTING);
+					nodes.get(current).draw(ctx);
 
 					// get the adjacent nodes. The number of the 
 					// adjacent nodes depends on the SearchGrid implementation
@@ -155,6 +204,8 @@ AStarSearchAdapter = (function() {
 							// we map the traversal from the current node to the neighbour
 							nodePathMap[neighbor] = current;
 
+							drawPath(ctx, getPath(nodePathMap, current));
+
 							// set the cost of getting to the neighbor
 							g[neighbor] = tentative_g;
 
@@ -170,10 +221,16 @@ AStarSearchAdapter = (function() {
 
 						}
 					}
-				}
 
-				// otherwise a path has not been found.
-				return false;
+					if(openSet.size() > 0) {
+						setTimeout(onePass, (typeof options.delay === "function" ? options.delay() : options.delay) || 100);
+					} else {
+						// otherwise a path has not been found.
+						done(false);
+					}
+				}
+				
+				onePass();
 			}
 		};
 
