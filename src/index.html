@@ -12,10 +12,6 @@
 	<div class="container">
 		<button onclick="init()">Init</button>
 		<button onclick="astar()">A*</button>
-		<label for="delay">Delay: <input type="range" min="0" max="1000" value="100" step="10" name="delay" id="delay" /></label>
-
-		<label for="adjacent4on">Adjacent 4: <input type="radio" name="adjacent4" id="adjacent4on" value="true" checked="checked" /></label>
-		<label for="adjacent8on">Adjacent 8: <input type="radio" name="adjacent4" id="adjacent8on" value="false" /></label>
 		<canvas id="canv" width="800" height="800"></canvas>
 	</div>
 	<script type="text/javascript" src="cellstate.js"></script>
@@ -31,9 +27,11 @@
 				boxSize: 10
 			,	lineColor: 'rgb(125,125,125)'
 			,	epsilon: 0.000000000001
-			,	adjacencyFilter : function() {
-					return document.getElementById('adjacent4on').checked ? 'adjacent4' : 'adjacent8';
-				}
+		};
+
+		var Support = 
+		{
+			
 		};
 
 		function init() 
@@ -44,29 +42,12 @@
 
 		function astar()
 		{	
-			var delay = function() {
-				return document.getElementById('delay').value;	
-			}
-
-			var buttons = document.querySelectorAll('button');
-			for(var i = 0; i < buttons.length; ++i) {
-				buttons[i].disabled = true;
-			}
-
-			var searchAdapter = new AStarSearchAdapter(searchgrid, { delay: delay }); 
-			searchgrid.setSearchAdapter(searchAdapter);
-			searchgrid.runSearch(function(path) {
-				console.log(path);
-
-				for(var i = 0; i < buttons.length; ++i) {
-					buttons[i].disabled = false;
-				}
-			});		
+			var searchAdapter = new AStarSearchAdapter(searchgrid, {})
+			searchgrid.setSearchAdapter( searchAdapter );
+			searchgrid.runSearch();		
 		}
 		
 
 	</script>
-
-
 </body>
 </html>
